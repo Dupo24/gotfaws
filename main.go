@@ -9,6 +9,7 @@ import (
 	// "strings"
 	// "time"
 	"github.com/gocolly/colly"
+	"github.com/gocolly/colly/debug"
 )
 
 type mainPage struct {
@@ -23,17 +24,14 @@ type resources struct {
  func ProviderWebScraper() {
 	mainpages := []mainPage{}
 
-	c := colly.NewCollector(
-		colly.AllowedDomains("registry.terraform.io"),
-		colly.MaxDepth(2),
-	)
+	c := colly.NewCollector(colly.Debugger(&debug.LogDebugger{}))
 	
 	//callbacks
 	// On every a element which has href attribute call callback
-	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
+	c.OnHTML("link[href]", func(e *colly.HTMLElement) {
 		resources := e.DOM
 		fmt.Println("found link")
-		fmt.Println(resources)
+		fmt.Println(e)
 		mainpage := mainPage{
 			Provider: resources.Text(),//.Find("div.ember-view").Text(),
 			// Resources:,
@@ -46,7 +44,7 @@ type resources struct {
 		fmt.Println("Visiting: ", r.URL.String())
 	})
 
-	c.Visit("https://registry.terraform.io/providers/hashicorp/aws/latest/docs")
+	c.Visit("https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources")
 	buildTable(mainpages)
  }
 
