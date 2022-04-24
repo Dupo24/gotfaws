@@ -25,12 +25,15 @@ type resources struct {
 
 	c := colly.NewCollector(
 		colly.AllowedDomains("registry.terraform.io"),
+		colly.MaxDepth(2),
 	)
 	
 	//callbacks
 	// On every a element which has href attribute call callback
-	c.OnHTML("div.ember-view", func(e *colly.HTMLElement) {
+	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		resources := e.DOM
+		fmt.Println("found link")
+		fmt.Println(resources)
 		mainpage := mainPage{
 			Provider: resources.Text(),//.Find("div.ember-view").Text(),
 			// Resources:,
