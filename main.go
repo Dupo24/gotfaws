@@ -5,15 +5,17 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"log"
+	"regexp"
 	//"strconv"
-	// "strings"
+	"strings"
 	// "time"
 	"github.com/gocolly/colly"
-	"github.com/gocolly/colly/debug"
+	//"github.com/gocolly/colly/debug"
 )
 
 type mainPage struct {
-	Provider string
+	Name string
+	Link string
 	//resources string
 	//link string
 
@@ -22,21 +24,27 @@ type resources struct {
 
 }
  func ProviderWebScraper() {
+	space := regexp.MustCompile(`\s+`)
+
 	mainpages := []mainPage{}
 
-	c := colly.NewCollector(colly.Debugger(&debug.LogDebugger{}))
+	c := colly.NewCollector()
+	// debugger
+	//needs imported debugger
+	//c := colly.NewCollector(colly.Debugger(&debug.LogDebugger{}))
 	
 	//callbacks
 	// On every a element which has href attribute call callback
-	c.OnHTML("link[href]", func(e *colly.HTMLElement) {
+	c.OnHTML("div[role=rowheader]", func(e *colly.HTMLElement) {
 		resources := e.DOM
-		fmt.Println("found link")
+		//fmt.Println("found link")
 		fmt.Println(e)
 		mainpage := mainPage{
-			Provider: resources.Text(),//.Find("div.ember-view").Text(),
+			Name: space.ReplaceAllString(strings.TrimSpace(resources.Text()), " "),
+			//Link:,
 			// Resources:,
 			// Link:,
-		} 
+		}
 		mainpages = append(mainpages, mainpage)
 	})
 
@@ -44,7 +52,7 @@ type resources struct {
 		fmt.Println("Visiting: ", r.URL.String())
 	})
 
-	c.Visit("https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources")
+	c.Visit("https://github.com/hashicorp/terraform-provider-aws/tree/main/website/docs/r")
 	buildTable(mainpages)
  }
 
