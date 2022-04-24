@@ -2,72 +2,62 @@ package main
 
 import (
 	"fmt"
+	"encoding/json"
+	"io/ioutil"
+	"log"
+	//"strconv"
 	// "strings"
 	// "time"
 	"github.com/gocolly/colly"
 )
 
 type mainPage struct {
-	provider string
-	resources string
-	resource_pagelink string
+	Provider string
+	//resources string
+	//link string
 
 }
 type resources struct {
 
 }
  func ProviderWebScraper() {
+	mainpages := []mainPage{}
+
 	c := colly.NewCollector(
-		//colly.AllowedDomains("registry.terraform.io"),
-		colly.MaxDepth(1),
-		colly.Async(true),
+		colly.AllowedDomains("registry.terraform.io"),
 	)
- }
-
-
-func main() {
 	
-	c := colly.NewCollector(
-		//colly.AllowedDomains("registry.terraform.io"),
-		colly.MaxDepth(1),
-		colly.Async(true),
-	)
-
 	//callbacks
 	// On every a element which has href attribute call callback
-	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
-		link := e.Attr("href")
-		// Print link
-		fmt.Printf("Link found: %q -> %s\n", e.Text, link)
-		// Visit link found on page
-		// Only those links are visited which are in AllowedDomains
-		c.Visit(e.Request.AbsoluteURL(link))
+	c.OnHTML("div.ember-view", func(e *colly.HTMLElement) {
+		resources := e.DOM
+		mainpage := mainPage{
+			Provider: resources.Text(),//.Find("div.ember-view").Text(),
+			// Resources:,
+			// Link:,
+		} 
+		mainpages = append(mainpages, mainpage)
 	})
 
-	// Before making a request print "Visiting ..."
 	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL.String())
-	})
-	
-	c.OnError(func(_ *colly.Response, err error) {
-		fmt.Println("Something went wrong:", err)
-	})
-	
-	c.OnResponse(func(r *colly.Response) {
-		fmt.Println("Visited", r.Request.URL)
-	})
-	
-	c.OnXML("//h1", func(e *colly.XMLElement) {
-		fmt.Println(e.Text)
-	})
-	
-	c.OnScraped(func(r *colly.Response) {
-		fmt.Println("Finished", r.Request.URL)
+		fmt.Println("Visiting: ", r.URL.String())
 	})
 
-	//grab main AWS provider page
-	c.Visit("https://registry.terraform.io/providers/hashicorp/aws/latest/docs/")
+	c.Visit("https://registry.terraform.io/providers/hashicorp/aws/latest/docs")
+	buildTable(mainpages)
+ }
 
+ func buildTable(data []mainPage) { 
+		f, err := json.MarshalIndent(data, "", " ")
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		_ = ioutil.WriteFile("resources.json", f, 0644)
+ }
+
+func main() {
+	ProviderWebScraper()
 }
 
 
