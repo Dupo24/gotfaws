@@ -41,7 +41,7 @@ type resources struct {
 		fmt.Println(e)
 		mainpage := mainPage{
 			Name: space.ReplaceAllString(strings.TrimSpace(resources.Text()), " "),
-			//Link:,
+			Link: e.Attr("href"),
 			// Resources:,
 			// Link:,
 		}
